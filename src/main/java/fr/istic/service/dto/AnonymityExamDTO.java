@@ -43,9 +43,7 @@ public class AnonymityExamDTO implements Serializable {
             "id=" + id +
             ", anonymousNumber='" + anonymousNumber + "'" +
             ", examId=" + examId +
-            ", examName='" + examName + "'" +
             ", sheetId=" + sheetId +
-            ", sheetName='" + sheetName + "'" +
             "}";
     }
 }
