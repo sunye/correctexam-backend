@@ -3010,4 +3010,52 @@ if (!user.isPresent()) {
         return Response.ok().build();
     }
 
+    @POST
+    @Path("importJuryMapping/{examId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    @RolesAllowed({ AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN })
+    public Response importJuryMapping(@PathParam("examId") long examId,
+                                      List<JuryMappingDTO> mappings,
+                                      @Context SecurityContext ctx) {
+
+        if (!securityService.canAccess(ctx, examId, Exam.class)) {
+            return Response.status(403).build();
+        }
+
+        Exam exam = Exam.findById(examId);
+        if (exam == null || exam.course == null) {
+            return Response.status(404).build();
+        }
+
+        for (JuryMappingDTO dto : mappings) {
+            if (dto == null ||
+                dto.anonymousNumber == null || dto.anonymousNumber.isBlank() ||
+                dto.ine == null || dto.ine.isBlank()) {
+                continue;
+            }
+
+            AnonymityExam ae = AnonymityExam
+                .findByExamIdAndNumber(examId, dto.anonymousNumber)
+                .firstResult();
+
+            if (ae == null || ae.sheet == null) continue;
+
+            Student student = Student
+                .findStudentsbyCourseIdAndINE(exam.course.id, dto.ine)
+                .firstResult();
+
+            if (student == null) continue;
+
+            ExamSheet sheet = ae.sheet;
+
+            sheet.students.add(student);
+            student.examSheets.add(sheet);
+
+            sheet.persistOrUpdate();
+            student.persistOrUpdate();
+        }
+
+        return Response.ok().build();
+    }
 }
