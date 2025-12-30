@@ -20,6 +20,7 @@ import fr.istic.service.ScanService;
 import fr.istic.service.SecurityService;
 import fr.istic.service.StudentResponseService;
 
+import fr.istic.service.dto.*;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
@@ -50,13 +51,6 @@ import fr.istic.service.customdto.exportpdf.StudentResponsepdf;
 import fr.istic.service.customdto.exportpdf.Studentpdf;
 import fr.istic.service.customdto.exportpdf.Textcommentspdf;
 import fr.istic.service.customdto.exportpdf.Zonepdf;
-import fr.istic.service.dto.Answer2HybridGradedCommentDTO;
-import fr.istic.service.dto.CourseDTO;
-import fr.istic.service.dto.ExamDTO;
-import fr.istic.service.dto.GradedCommentDTO;
-import fr.istic.service.dto.HybridGradedCommentDTO;
-import fr.istic.service.dto.QuestionDTO;
-import fr.istic.service.dto.TextCommentDTO;
 import fr.istic.service.mapper.CommentsMapper;
 import fr.istic.service.mapper.ExamMapper;
 import fr.istic.service.mapper.GradedCommentMapper;
@@ -2991,6 +2985,26 @@ if (!user.isPresent()) {
         for (String n : numbers) {
             if (n == null || n.trim().isEmpty()) continue;
             AnonymityExam.assignExam(examId, n.trim());
+        }
+
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("associateAnon/{examId}")
+    @Transactional
+    @RolesAllowed({ AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN })
+    public Response associateAnon(@PathParam("examId") long examId,
+                                  List<AnonymityExamDTO> data,
+                                  @Context SecurityContext ctx) {
+
+        if (!securityService.canAccess(ctx, examId, Exam.class)) {
+            return Response.status(403).build();
+        }
+
+        for (AnonymityExamDTO dto : data) {
+            if (dto.anonymousNumber == null || dto.sheetId == null) continue;
+            AnonymityExam.assignSheet(examId, dto.anonymousNumber, dto.sheetId);
         }
 
         return Response.ok().build();
