@@ -1,22 +1,7 @@
 package fr.istic.web.rest;
 
 import fr.istic.config.JHipsterProperties;
-import fr.istic.domain.Answer2HybridGradedComment;
-import fr.istic.domain.Comments;
-import fr.istic.domain.Course;
-import fr.istic.domain.CourseGroup;
-import fr.istic.domain.Exam;
-import fr.istic.domain.ExamSheet;
-import fr.istic.domain.FinalResult;
-import fr.istic.domain.GradedComment;
-import fr.istic.domain.HybridGradedComment;
-import fr.istic.domain.Question;
-import fr.istic.domain.Scan;
-import fr.istic.domain.Student;
-import fr.istic.domain.StudentResponse;
-import fr.istic.domain.Template;
-import fr.istic.domain.TextComment;
-import fr.istic.domain.User;
+import fr.istic.domain.*;
 import fr.istic.domain.enumeration.GradeType;
 import fr.istic.security.AuthoritiesConstants;
 import fr.istic.service.Answer2HybridGradedCommentService;
@@ -2987,6 +2972,28 @@ if (!user.isPresent()) {
         List<Long> textComments = new ArrayList<>();
         List<Long> gradedComments = new ArrayList<>();
 
+    }
+
+    @POST
+    @Path("importAnonNumbers/{examId}")
+    @Transactional
+    @RolesAllowed({ AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN })
+    public Response importAnonNumbers(@PathParam("examId") long examId, List<String> numbers, @Context SecurityContext ctx) {
+
+        if (!securityService.canAccess(ctx, examId, Exam.class)) {
+            return Response.status(403).build();
+        }
+
+        if (numbers == null) {
+            return Response.ok().build();
+        }
+
+        for (String n : numbers) {
+            if (n == null || n.trim().isEmpty()) continue;
+            AnonymityExam.assignExam(examId, n.trim());
+        }
+
+        return Response.ok().build();
     }
 
 }
