@@ -3058,4 +3058,41 @@ if (!user.isPresent()) {
 
         return Response.ok().build();
     }
+
+    @GET
+    @Path("exportGradesAnonJson/{examId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @RolesAllowed({ AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN })
+    public Response exportGradesAnonJson(@PathParam("examId") long examId,
+                                         @Context SecurityContext ctx) {
+
+        if (!securityService.canAccess(ctx, examId, Exam.class)) {
+            return Response.status(403).build();
+        }
+
+        Map<Long, FinalResult> finalfinalResultsByStudentId = new HashMap<>();
+        Map<ExamSheet, Integer> finalNotes = new HashMap<>();
+        Map<ExamSheet, List<StudentResponse>> mapstudentResp = new HashMap<>();
+
+        computeFinalNote(examId, finalfinalResultsByStudentId, finalNotes, mapstudentResp);
+
+        List<Map<String, Object>> res = new ArrayList<>();
+
+        for (Map.Entry<ExamSheet, Integer> e : finalNotes.entrySet()) {
+            ExamSheet sheet = e.getKey();
+            Integer note = e.getValue();
+
+            AnonymityExam ae = AnonymityExam.findByExamIdAndSheetId(examId, sheet.id).firstResult();
+            if (ae == null) continue;
+
+            Map<String, Object> line = new HashMap<>();
+            line.put("anonymousNumber", ae.anonymousNumber);
+            line.put("note", note / 100.0);
+
+            res.add(line);
+        }
+
+        return Response.ok(res).build();
+    }
 }
