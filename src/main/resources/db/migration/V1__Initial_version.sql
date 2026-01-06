@@ -169,6 +169,7 @@ CREATE TABLE `exam_sheet` (
 
 --
 -- Structure de la table `final_result`
+-- (MODIFICATION MINIMALE : ajout d'une FK propre vers anonymity_exam)
 --
 
 CREATE TABLE `final_result` (
@@ -176,7 +177,8 @@ CREATE TABLE `final_result` (
                                 `note` int DEFAULT NULL,
                                 `student_id` bigint DEFAULT NULL,
                                 `exam_id` bigint DEFAULT NULL,
-                                `frozen` bit(1) DEFAULT NULL
+                                `frozen` bit(1) DEFAULT NULL,
+                                `anonymity_exam_id` bigint DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -552,7 +554,9 @@ ALTER TABLE `final_result`
     ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `cannot ahve two finalresult for the same student and same exam` (`student_id`,`exam_id`),
   ADD KEY `fk_final_result_student_id` (`student_id`),
-  ADD KEY `fk_final_result_exam_id` (`exam_id`);
+  ADD KEY `fk_final_result_exam_id` (`exam_id`),
+  ADD UNIQUE KEY `ux_final_result_anonymity_exam_id` (`anonymity_exam_id`),
+  ADD KEY `fk_final_result_anonymity_exam_id` (`anonymity_exam_id`);
 
 --
 -- Index pour la table `graded_comment`
@@ -890,7 +894,8 @@ ALTER TABLE `exam_sheet`
 --
 ALTER TABLE `final_result`
     ADD CONSTRAINT `fk_final_result_exam_id` FOREIGN KEY (`exam_id`) REFERENCES `exam` (`id`),
-  ADD CONSTRAINT `fk_final_result_student_id` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`);
+  ADD CONSTRAINT `fk_final_result_student_id` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`),
+  ADD CONSTRAINT `fk_final_result_anonymity_exam` FOREIGN KEY (`anonymity_exam_id`) REFERENCES `anonymity_exam` (`id`);
 
 --
 -- Contraintes pour la table `graded_comment`
