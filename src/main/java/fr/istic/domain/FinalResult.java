@@ -36,6 +36,11 @@ public class FinalResult extends PanacheEntityBase implements Serializable {
     @JsonbTransient
     public Student student;
 
+    @ManyToOne
+    @JoinColumn(name = "anonymity_exam_id")
+    @JsonbTransient
+    public AnonymityExam anonymityExam;
+
     @Transient
     public long getStudentID(){
         return student.id;
@@ -124,5 +129,7 @@ public class FinalResult extends PanacheEntityBase implements Serializable {
         return find("select distinct f from FinalResult f join fetch f.exam as e join fetch e.scanfile as scan join fetch scan.sheets as sheets where  f.exam.id = ?1",examId);
     }
 
-
+    public static PanacheQuery<FinalResult> findByExamIdAndAnonymityExamId(long examId, long anonymityExamId) {
+        return find("select fr from FinalResult fr where fr.exam.id = ?1 and fr.anonymityExam.id = ?2", examId, anonymityExamId);
+    }
 }

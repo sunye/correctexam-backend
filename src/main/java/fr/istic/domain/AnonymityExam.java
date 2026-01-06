@@ -165,4 +165,12 @@ public class AnonymityExam extends PanacheEntityBase implements Serializable {
     public static PanacheQuery<AnonymityExam> findUnassignedByExamId(long examId) {
         return find("select anonymity from AnonymityExam anonymity where anonymity.exam.id =?1 and anonymity.sheet is null", examId);
     }
+
+    public static PanacheQuery<AnonymityExam> findAssignedByExamId(long examId) {
+        return find("select ae from AnonymityExam ae where ae.exam.id = ?1 and ae.sheet is not null", examId);
+    }
+
+    public static PanacheQuery<FinalResult> findFinalResultsWithAnonByExamId(long examId) {
+        return find("select fr from FinalResult fr where fr.exam.id = ?1 and fr.anonymityExam is not null", examId);
+    }
 }

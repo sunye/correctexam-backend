@@ -3054,6 +3054,15 @@ if (!user.isPresent()) {
 
             sheet.persistOrUpdate();
             student.persistOrUpdate();
+
+            FinalResult fr = FinalResult
+                .findByExamIdAndAnonymityExamId(examId, ae.id)
+                .firstResult();
+
+            if (fr != null) {
+                fr.student = student;
+                fr.persistOrUpdate();
+            }
         }
 
         return Response.ok().build();
@@ -3071,27 +3080,43 @@ if (!user.isPresent()) {
             return Response.status(403).build();
         }
 
-        Map<Long, FinalResult> finalfinalResultsByStudentId = new HashMap<>();
-        Map<ExamSheet, Integer> finalNotes = new HashMap<>();
-        Map<ExamSheet, List<StudentResponse>> mapstudentResp = new HashMap<>();
-
-        computeFinalNote(examId, finalfinalResultsByStudentId, finalNotes, mapstudentResp);
-
         List<Map<String, Object>> res = new ArrayList<>();
 
-        for (Map.Entry<ExamSheet, Integer> e : finalNotes.entrySet()) {
-            ExamSheet sheet = e.getKey();
-            Integer note = e.getValue();
+        List<FinalResult> frs = AnonymityExam.findFinalResultsWithAnonByExamId(examId).list();
 
-            AnonymityExam ae = AnonymityExam.findByExamIdAndSheetId(examId, sheet.id).firstResult();
-            if (ae == null) continue;
+        for (FinalResult fr : frs) {
+            if (fr.note == null || fr.anonymityExam == null) continue;
 
             Map<String, Object> line = new HashMap<>();
-            line.put("anonymousNumber", ae.anonymousNumber);
-            line.put("note", note / 100.0);
-
+            line.put("anonymousNumber", fr.anonymityExam.anonymousNumber);
+            line.put("note", fr.note / 100.0);
             res.add(line);
         }
+
+        return Response.ok(res).build();
+    }
+
+    @GET
+    @Path("anonNumbers/{examId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @RolesAllowed({ AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN })
+    public Response anonNumbers(@PathParam("examId") long examId, @Context SecurityContext ctx) {
+
+        if (!securityService.canAccess(ctx, examId, Exam.class)) {
+            return Response.status(403).build();
+        }
+
+        List<AnonymityExamDTO> res = AnonymityExam.findByExamId(examId).list()
+            .stream()
+            .map(ae -> {
+                AnonymityExamDTO dto = new AnonymityExamDTO();
+                dto.anonymousNumber = ae.anonymousNumber;
+                dto.examId = examId;
+                dto.sheetId = ae.sheet != null ? ae.sheet.id : null;
+                return dto;
+            })
+            .toList();
 
         return Response.ok(res).build();
     }
