@@ -169,7 +169,6 @@ CREATE TABLE `exam_sheet` (
 
 --
 -- Structure de la table `final_result`
--- (MODIFICATION MINIMALE : ajout d'une FK propre vers anonymity_exam)
 --
 
 CREATE TABLE `final_result` (
@@ -177,8 +176,7 @@ CREATE TABLE `final_result` (
                                 `note` int DEFAULT NULL,
                                 `student_id` bigint DEFAULT NULL,
                                 `exam_id` bigint DEFAULT NULL,
-                                `frozen` bit(1) DEFAULT NULL,
-                                `anonymity_exam_id` bigint DEFAULT NULL
+                                `frozen` bit(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -462,19 +460,6 @@ CREATE TABLE `zone` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `anonymity_exam`
---
-
-CREATE TABLE `anonymity_exam` (
-                                  `id` bigint NOT NULL,
-                                  `anonymous_number` varchar(255) NOT NULL,
-                                  `exam_id` bigint NOT NULL,
-                                  `sheet_id` bigint DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
 -- Index pour les tables déchargées
 --
 
@@ -554,9 +539,7 @@ ALTER TABLE `final_result`
     ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `cannot ahve two finalresult for the same student and same exam` (`student_id`,`exam_id`),
   ADD KEY `fk_final_result_student_id` (`student_id`),
-  ADD KEY `fk_final_result_exam_id` (`exam_id`),
-  ADD UNIQUE KEY `ux_final_result_anonymity_exam_id` (`anonymity_exam_id`),
-  ADD KEY `fk_final_result_anonymity_exam_id` (`anonymity_exam_id`);
+  ADD KEY `fk_final_result_exam_id` (`exam_id`);
 
 --
 -- Index pour la table `graded_comment`
@@ -692,17 +675,6 @@ ALTER TABLE `zone`
     ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `anonymity_exam`
---
-ALTER TABLE `anonymity_exam`
-    ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `UK_anonymity_exam_exam_id_anonymous_number` (`exam_id`, `anonymous_number`),
-  ADD KEY `idx_anonymity_exam_exam_id` (`exam_id`),
-  ADD KEY `idx_anonymity_exam_sheet_id` (`sheet_id`);
-
--- --------------------------------------------------------
-
---
 -- AUTO_INCREMENT pour les tables déchargées
 --
 
@@ -827,14 +799,6 @@ ALTER TABLE `zone`
     MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `anonymity_exam`
---
-ALTER TABLE `anonymity_exam`
-    MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
-
--- --------------------------------------------------------
-
---
 -- Contraintes pour les tables déchargées
 --
 
@@ -894,8 +858,7 @@ ALTER TABLE `exam_sheet`
 --
 ALTER TABLE `final_result`
     ADD CONSTRAINT `fk_final_result_exam_id` FOREIGN KEY (`exam_id`) REFERENCES `exam` (`id`),
-  ADD CONSTRAINT `fk_final_result_student_id` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`),
-  ADD CONSTRAINT `fk_final_result_anonymity_exam` FOREIGN KEY (`anonymity_exam_id`) REFERENCES `anonymity_exam` (`id`);
+  ADD CONSTRAINT `fk_final_result_student_id` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`);
 
 --
 -- Contraintes pour la table `graded_comment`
@@ -964,14 +927,6 @@ ALTER TABLE `student_response_textcomments`
 --
 ALTER TABLE `text_comment`
     ADD CONSTRAINT `fk_text_comment_question_id` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`);
-
---
--- Contraintes pour la table `anonymity_exam`
---
-ALTER TABLE `anonymity_exam`
-    ADD CONSTRAINT `FK9bfomu0vjndfupomsbbmlsgkf` FOREIGN KEY (`exam_id`) REFERENCES `exam` (`id`),
-  ADD CONSTRAINT `FKpl9oo6y3l86y88v37b2o5032t` FOREIGN KEY (`sheet_id`) REFERENCES `exam_sheet` (`id`);
-
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
@@ -1021,4 +976,7 @@ alter table course add column archived bit not null DEFAULT 0;
 alter table prediction add constraint FK1xsmwx00gk7213kwfeah9lcjx foreign key (question_id) references question (id);
 alter table prediction add constraint FK8nv2hkm3mhxll6be9mwj5402t foreign key (sheet_id) references exam_sheet (id);
 
+
 COMMIT;
+
+

@@ -3073,23 +3073,33 @@ if (!user.isPresent()) {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @RolesAllowed({ AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN })
-    public Response exportGradesAnonJson(@PathParam("examId") long examId,
-                                         @Context SecurityContext ctx) {
+    public Response exportGradesAnonJson(@PathParam("examId") long examId, @Context SecurityContext ctx) {
 
         if (!securityService.canAccess(ctx, examId, Exam.class)) {
             return Response.status(403).build();
         }
 
+        Map<Long, FinalResult> finalfinalResultsByStudentId = new HashMap<>();
+        Map<ExamSheet, Integer> finalNotes = new HashMap<>();
+        Map<ExamSheet, List<StudentResponse>> mapstudentResp = new HashMap<>();
+        this.computeFinalNote(examId, finalfinalResultsByStudentId, finalNotes, mapstudentResp);
+
+        Map<Long, String> anonBySheetId = AnonymityExam.findByExamId(examId).list().stream()
+            .filter(ae -> ae.sheet != null && ae.anonymousNumber != null && !ae.anonymousNumber.isBlank())
+            .collect(Collectors.toMap(ae -> ae.sheet.id, ae -> ae.anonymousNumber, (a,b) -> a));
+
         List<Map<String, Object>> res = new ArrayList<>();
 
-        List<FinalResult> frs = AnonymityExam.findFinalResultsWithAnonByExamId(examId).list();
+        for (Map.Entry<ExamSheet, Integer> e : finalNotes.entrySet()) {
+            ExamSheet sheet = e.getKey();
+            Integer note100 = e.getValue();
+            if (sheet == null || note100 == null) continue;
 
-        for (FinalResult fr : frs) {
-            if (fr.note == null || fr.anonymityExam == null) continue;
+            String anon = anonBySheetId.get(sheet.id);
 
             Map<String, Object> line = new HashMap<>();
-            line.put("anonymousNumber", fr.anonymityExam.anonymousNumber);
-            line.put("note", fr.note / 100.0);
+            line.put("anonymousNumber", anon);
+            line.put("note", note100 / 100.0);
             res.add(line);
         }
 

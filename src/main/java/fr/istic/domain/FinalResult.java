@@ -36,11 +36,6 @@ public class FinalResult extends PanacheEntityBase implements Serializable {
     @JsonbTransient
     public Student student;
 
-    @ManyToOne
-    @JoinColumn(name = "anonymity_exam_id")
-    @JsonbTransient
-    public AnonymityExam anonymityExam;
-
     @Transient
     public long getStudentID(){
         return student.id;
